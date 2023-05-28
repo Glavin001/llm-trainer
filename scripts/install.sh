@@ -7,6 +7,7 @@ echo "Installing dependencies..."
 
 # ssh -T git@github.com
 
+# TODO: First check if docker is installed
 sudo apt-get update
 sudo apt-get install ca-certificates curl gnupg
 

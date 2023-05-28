@@ -32,7 +32,7 @@ python3 ./scripts/qlora.py \
     --max_train_samples 100 \
     --report_to wandb \
     --logging_steps 1 \
-    --max_steps 100 \
+    --max_steps 10 \
     # --do_eval True \
     # --do_mmlu_eval True \
     # --source_max_len 384 \

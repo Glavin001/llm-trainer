@@ -36,4 +36,5 @@
     # ls -la /home/ubuntu/
     # pwd
 
-sudo docker compose exec llm-trainer bash -c "python3 ./scripts/fine-tune.py"
+# sudo docker compose exec llm-trainer bash -c "python3 ./scripts/fine-tune.py"
+sudo docker compose exec llm-trainer bash -c "./scripts/fine-tune.sh"

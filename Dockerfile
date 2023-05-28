@@ -40,18 +40,15 @@ ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 ENV NVIDIA_REQUIRE_CUDA "cuda>=11.8"
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+# COPY requirements.txt .
+# RUN pip install -r requirements.txt
 
 # COPY scripts/fine-tune.py .
 # RUN python3 ./scripts/fine-tune.py
 
 ENV LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu
-# RUN mkdir -p ~/
-RUN mkdir -p /home/ubuntu/
 
-RUN groupadd -g 1000 ubuntu && \
+RUN mkdir -p /home/ubuntu/ && \
+	groupadd -g 1000 ubuntu && \
     useradd -u 1000 -g ubuntu -m -s /bin/bash ubuntu
-
 USER ubuntu
-

@@ -13,7 +13,7 @@ services:
     # image: nvidia/cuda:10.2-base
     # command: nvidia-smi
 
-    # image: glavin001/llm-trainer:latest
+    image: glavin001/llm-trainer:latest
     # build from Dockerfile
     build:
       context: .
@@ -33,8 +33,12 @@ services:
     user: ubuntu
     ports:
       - "8888:8888"
+    entrypoint: ./scripts/start-jupyter.sh
+    # entrypoint: bash -c "$(python -m site --user-base)/bin/jupyter-lab --ip=0.0.0.0"
     # entrypoint: python3 ./scripts/fine-tune.py
     # entrypoint: bash -c "echo \"Running...\" && sleep infinity"
     # expose port 8888
-    entrypoint: bash -c "$(python -m site --user-base)/bin/jupyter-lab --ip=0.0.0.0"
+    # entrypoint: bash -c "echo $(python -m site --user-base)"
+    # entrypoint: bash -c "ls -la $(python -m site --user-base)"
     # entrypoint: bash -c "$(python -m site --user-base)/bin/jupyter-lab"
+    # entrypoint: bash -c "ls -la /home/"

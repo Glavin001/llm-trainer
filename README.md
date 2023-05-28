@@ -1,22 +1,37 @@
-# llm-trainer
-Training/Fine-Tuning Large Language Models
+# LLM Trainer
 
+> Training/Fine-Tuning Large Language Models
+
+<!--
+Appears to be already installed
 1. Install Lambda Stack: https://lambdalabs.com/lambda-stack-deep-learning-software
+Lambda Cloud should already come with `docker` and `docker compose` plugin installed.
+-->
 
-2. Weights and Biases
+Login to Docker:
+
+```bash
+sudo docker login
+```
+
+Pull existing Docker image to warm build cache:
+
+```bash
+sudo docker pull glavin001/llm-trainer:may-28-433
+```
+
+Build & start container with Jupyter labs/notebook:
+
+```bash
+sudo docker compose up --build
+```
+
+Login to Weights and Biases
 
 ```bash
 wandb login -u USERNAME
 ```
 
-3.
-
 ```bash
-docker-compose up --build
-```
-
-4.
-
-```bash
-./scripts/fine-tune.sh
+./scripts/train.sh
 ```
