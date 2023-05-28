@@ -1,3 +1,4 @@
+# Source: https://github.com/lambdal/lambda-stack-dockerfiles
 FROM ubuntu:22.04
 
 WORKDIR /root/

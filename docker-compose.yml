@@ -1,0 +1,40 @@
+services:
+  llm-trainer:
+# sudo docker run \
+#     --user ubuntu \
+#     --gpus 1 \
+#     -v $(pwd):/workspace \
+#     -v $(pwd)/home/.cache:/root/.cache \
+#     -v $(pwd)/home/:/home/ubuntu/ \
+#     -w /workspace \
+#     glavin001/llm-trainer:latest \
+#     python3 ./scripts/fine-tune.py
+# Converted to docker-compose.yml
+    # image: nvidia/cuda:10.2-base
+    # command: nvidia-smi
+
+    # image: glavin001/llm-trainer:latest
+    # build from Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes:
+      - ./:/workspace
+      - ./home/.cache:/root/.cache
+      - ./home/:/home/ubuntu/
+    working_dir: /workspace
+    user: ubuntu
+    ports:
+      - "8888:8888"
+    # entrypoint: python3 ./scripts/fine-tune.py
+    # entrypoint: bash -c "echo \"Running...\" && sleep infinity"
+    # expose port 8888
+    entrypoint: bash -c "$(python -m site --user-base)/bin/jupyter-lab --ip=0.0.0.0"
+    # entrypoint: bash -c "$(python -m site --user-base)/bin/jupyter-lab"

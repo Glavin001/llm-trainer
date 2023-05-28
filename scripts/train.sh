@@ -10,19 +10,24 @@
 # sudo docker run --gpus 1 -v $(pwd):/workspace -w /workspace lambda-stack:22.04 ls -la ~/
 # sudo docker run --gpus 1 -v $(pwd):/workspace -w /workspace lambda-stack:22.04 ls -la /root/.cache
 # sudo docker run --gpus 1 -v $(pwd):/workspace -w /workspace lambda-stack:22.04 ls -la /workspace
-sudo docker run \
-    --user ubuntu \
-    --gpus 1 \
-    -v $(pwd):/workspace \
-    -v $(pwd)/home/.cache:/root/.cache \
-    -v $(pwd)/home/:/home/ubuntu/ \
-    -w /workspace lambda-stack:22.04 \
-    env
+
+# sudo docker run \
+#     --user ubuntu \
+#     --gpus 1 \
+#     -v $(pwd):/workspace \
+#     -v $(pwd)/home/.cache:/root/.cache \
+#     -v $(pwd)/home/:/home/ubuntu/ \
+#     -w /workspace \
+#     glavin001/llm-trainer:latest \
+#     python3 ./scripts/fine-tune.py
+    # ls -la /home/ubuntu/.local
+    # -w /workspace lambda-stack:22.04 \
+    # python -m site --user-base
+    # env
     # jupyter-lab
     # pip install -r requirements.txt
     # pip install jupyterlab
     # jupyter notebook
-    # python3 ./scripts/fine-tune.py
     # ls -la ~/.cache/huggingface
     # wandb login <wandb-api-key>
     # -v $(pwd)/.cache:/root/.cache \
@@ -30,3 +35,5 @@ sudo docker run \
     # -v $(pwd)/.config:/home/ubuntu/.config \
     # ls -la /home/ubuntu/
     # pwd
+
+sudo docker compose exec llm-trainer bash -c "python3 ./scripts/fine-tune.py"
