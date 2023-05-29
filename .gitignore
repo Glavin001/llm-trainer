@@ -162,6 +162,10 @@ cython_debug/
 wandb/
 outputs/
 output-qlora/
-.cache/
+output-*/
+.cache/**
 home/**
-!home/.gitkeep
+# !home/.gitkeep
+data/**
+!**/.gitkeep
+!.cache/.gitkeep

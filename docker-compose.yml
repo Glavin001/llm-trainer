@@ -13,11 +13,12 @@ services:
     # image: nvidia/cuda:10.2-base
     # command: nvidia-smi
 
-    image: glavin001/llm-trainer:latest
+    # image: glavin001/llm-trainer:latest
+    image: glavin001/llm-trainer:may-28-433
     # build from Dockerfile
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     deploy:
       resources:
         reservations:

@@ -26,7 +26,13 @@ Build & start container with Jupyter labs/notebook:
 sudo docker compose up --build
 ```
 
-Login to Weights and Biases
+If you see error:
+> tornado.web.HTTPError: HTTP 403: Forbidden
+
+Then stop the docker container and retry.
+
+
+Login to Weights and Biases:
 
 ```bash
 wandb login -u USERNAME

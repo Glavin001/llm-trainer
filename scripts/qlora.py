@@ -387,22 +387,57 @@ class DataCollatorForCausalLM(object):
         # Tokenize
         tokenized_sources_with_prompt = self.tokenizer(
             sources,
-            max_length=self.source_max_len,
-            truncation=True,
+            # max_length=self.source_max_len,
+            # truncation=True,
+            truncation=False
         )
+
+        # Filter out tokenized_sources which are too long
+        # tokenized_sources_with_prompt = [
+        #     tokenized_source_with_prompt for tokenized_source_with_prompt in tokenized_sources_with_prompt_raw
+        #     if len(tokenized_source_with_prompt['input_ids']) <= self.source_max_len
+        # ]
+        # # Print error if there is a difference and mention count
+        # if len(tokenized_sources_with_prompt_raw) != len(tokenized_sources_with_prompt):
+        #     print(f"Warning: {len(tokenized_sources_with_prompt_raw) - len(tokenized_sources_with_prompt)} examples were filtered out because they were too long")
+
         tokenized_targets = self.tokenizer(
             targets,
             max_length=self.target_max_len,
             truncation=True,
+            # truncation=False,
             add_special_tokens=False,
         )
+
+        # Filter out tokenized_targets which are too long
+        # tokenized_targets = [
+        #     tokenized_target for tokenized_target in tokenized_targets_raw
+        #     if len(tokenized_target['input_ids']) <= self.target_max_len
+        # ]
+
         # Build the input and labels for causal LM
         input_ids = []
-        labels = [] 
+        labels = []
         for tokenized_source, tokenized_target in zip(
             tokenized_sources_with_prompt['input_ids'], 
             tokenized_targets['input_ids']
         ):
+            # Pass for any tokenized_source or tokenized_target that is too long
+            if len(tokenized_source) > self.source_max_len:
+                # Print error message
+                print(f"Warning: input too long: {len(tokenized_source)}. Skipping.")
+                # continue
+                # Truncate the tokenized_source from the front
+                tokenized_source = tokenized_source[-self.source_max_len:]
+
+            # if len(tokenized_target) > self.target_max_len:
+            #     # Print error message
+            #     print(f"Warning: output too long: {len(tokenized_target)}. Skipping.")
+            #     # continue
+            #     # tokenized_target = tokenized_target[-self.target_max_len:]
+            #     # Truncate the tokenized_target from the back
+            #     tokenized_target = tokenized_target[:self.target_max_len]
+
             if not self.predict_with_generate:
                 input_ids.append(torch.tensor(tokenized_source + tokenized_target))
                 if not self.train_on_source:
@@ -413,12 +448,22 @@ class DataCollatorForCausalLM(object):
                     labels.append(torch.tensor(copy.deepcopy(tokenized_source + tokenized_target)))
             else:
                 input_ids.append(torch.tensor(tokenized_source))
+
+        # check input_ids isn't empty
+        # if len(input_ids) == 0:
+        #     print(f"No input_ids were found. Check the dataset, source_max_len, and target_max_len parameters: {len(instances)}")
+        #     return {
+        #         'input_ids': torch.tensor([]),
+        #         'attention_mask': torch.tensor([]),
+        #         'labels': torch.tensor([]),
+        #     }
+
         # Apply padding
         input_ids = pad_sequence(input_ids, batch_first=True, padding_value=self.tokenizer.pad_token_id)
         labels = pad_sequence(labels, batch_first=True, padding_value=IGNORE_INDEX) if not self.predict_with_generate else None
         data_dict = {
             'input_ids': input_ids,
-            'attention_mask':input_ids.ne(self.tokenizer.pad_token_id),
+            'attention_mask': input_ids.ne(self.tokenizer.pad_token_id),
         }
         if labels is not None:
             data_dict['labels'] = labels
@@ -520,6 +565,14 @@ def make_data_module(tokenizer: transformers.PreTrainedTokenizer, args) -> Dict:
         dataset = load_dataset("akoksal/LongForm")
     elif args.dataset == 'vicuna':
         raise NotImplementedError("Vicuna data was not released.")
+    elif args.dataset == 'edie-v1':
+        # dataset = load_dataset('json', data_files={ 'train': 'data/edie-v1/all.jsonl' }, name='edie-v1')
+        dataset = load_dataset('json', data_files={
+            'train': 'data/edie-v1/train.jsonl',
+            'eval': 'data/edie-v1/test.jsonl',
+        }, name='edie-v1')
+        for old, new in [["prompt", "input"], ["completion", "output"]]:
+            dataset = dataset.rename_column(old, new)
     # elif args.dataset == 'english_quotes':
     #     dataset = load_dataset("Abirate/english_quotes")
     #     dataset = dataset.map(lambda samples: tokenizer(samples["quote"]), batched=True)
@@ -564,7 +617,7 @@ def make_data_module(tokenizer: transformers.PreTrainedTokenizer, args) -> Dict:
 def get_last_checkpoint(checkpoint_dir):
     if isdir(checkpoint_dir):
         is_completed = exists(join(checkpoint_dir, 'completed'))
-        if is_completed: return None, True # already finished
+        # if is_completed: return None, True # already finished
         max_step = 0
         for filename in os.listdir(checkpoint_dir):
             if isdir(join(checkpoint_dir, filename)) and filename.startswith('checkpoint'):
@@ -713,11 +766,12 @@ def train():
     for k, v in dtypes.items():
         print(k, v, v/total)
 
-    if args.bits < 16:
-        old_state_dict = model.state_dict
-        model.state_dict = (
-            lambda self, *_, **__: get_peft_model_state_dict(self, old_state_dict())
-        ).__get__(model, type(model))
+    # https://github.com/artidoro/qlora/pull/44/commits/f1d1b2901a20b7e14be4d5738d15fa110d24e944
+    # if args.bits < 16:
+    #     old_state_dict = model.state_dict
+    #     model.state_dict = (
+    #         lambda self, *_, **__: get_peft_model_state_dict(self, old_state_dict())
+    #     ).__get__(model, type(model))
 
     all_metrics = {"run_name": args.run_name}
     # Training
@@ -738,7 +792,7 @@ def train():
     # Prediction
     if args.do_predict:
         logger.info("*** Predict ***")
-        prediction_output = trainer.predict(test_dataset=data_module['predict_dataset'],metric_key_prefix="predict")
+        prediction_output = trainer.predict(test_dataset=data_module['predict_dataset'], metric_key_prefix="predict")
         prediction_metrics = prediction_output.metrics
         predictions = prediction_output.predictions
         predictions = np.where(predictions != -100, predictions, tokenizer.pad_token_id)
@@ -748,7 +802,12 @@ def train():
         with open(os.path.join(args.output_dir, 'predictions.jsonl'), 'w') as fout:
             for i, example in enumerate(data_module['predict_dataset']):
                 example['prediction_with_input'] = predictions[i].strip()
-                example['prediction'] = predictions[i].replace(example['input'], '').strip()
+                # example['prediction'] = predictions[i].replace(example['input'], '').strip()
+
+                # FIXME: This is a hack to get the prediction without the input.
+                # Split by "\n\nWriting Editor Feedback:\n" and get only after
+                example['prediction'] = predictions[i].split("\n\nWriting Editor Feedback:\n")[1]
+
                 fout.write(json.dumps(example) + '\n')
         print(prediction_metrics)
         trainer.log_metrics("predict", prediction_metrics)
